@@ -11,25 +11,27 @@ class TaskDB :
                 "tasks", metadata,
                 Column("id", Integer, primary_key=True),
                 Column("title", String, nullable=False),
-                Column("done", Boolean, default=False) , 
-                # Column("status", Enum('Pending', 'EnCours', 'Done', name="task_status"), default='Pending', nullable=False),
-                # Column("priority", Enum('P0', 'P1', 'P2', 'P3', name="task_priority"), default='P3', nullable=False)
+                # Column("done", Boolean, default=False) , 
+                Column("status", Enum('Pending', 'EnCours', 'Done', name="task_status"), default='Pending', nullable=False),
+                Column("priority", Enum('P0', 'P1', 'P2', 'P3', name="task_priority"), default='P3', nullable=False)
 
             )
             
             metadata.create_all(self.engine)
 
-        def add_task(self , title_value):
+        def add_task(self , title_value , priority_value):
               
-              query = self.tasks.insert().values( title = title_value , done = False)
+            #   query = self.tasks.insert().values( title = title_value , done = False)
+              query = self.tasks.insert().values( title = title_value , status = 'Pending' , priority = priority_value)
+
               with self.engine.begin() as conn :
                     conn.execute(query)
                     conn.commit()
         def get_all(self):
               with self.engine.begin() as conn : 
-                    data = conn.execute(select(self.tasks).group_by(self.tasks.c.done , self.tasks.c.id))
+                    data = conn.execute(select(self.tasks).group_by(self.tasks.c.status , self.tasks.c.id))
                     conn.commit()
-              return [Task(x.id , x.title , x.done) for x in data]
+              return [Task(x.id , x.title , x.status ,x.priority) for x in data]
         
         def delete_by_id( self , task_id):
               
@@ -47,9 +49,10 @@ class TaskDB :
                     conn.execute( query )
                     conn.commit()
         # this is for updating the status ( done)
-        def update_status(self , task : Task) :
+        def update(self , task : Task) :
               
-              query = update(self.tasks).where(self.tasks.c.id == task.id ).values( done = task.done)
+            #   query = update(self.tasks).where(self.tasks.c.id == task.id ).values( done = task.done)
+              query = update(self.tasks).where(self.tasks.c.id == task.id ).values( status = task.status , priority = task.priority)
               
               with self.engine.begin() as conn : 
                     conn.execute( query )
